@@ -2,6 +2,8 @@
 
 한 프로젝트에서 여러 게임을 실행하는 Vite + Phaser 게임 모음입니다.
 
+플레이 주소: https://wyna3209.github.io/mini-game-arcade/
+
 ## 실행
 
 ```sh
