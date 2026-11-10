@@ -1,0 +1,70 @@
+/* Speech, artwork, and nameplates occupy separate rows, even when text wraps. */
+.owner {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 1cqw;
+  justify-items: center;
+}
+.hoothoot { top: 23%; height: 51%; }
+.klink { top: 31%; height: 43%; }
+.owner .speech {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  margin: 0;
+  align-self: start;
+}
+.owner .owner-art {
+  position: relative;
+  inset: auto;
+  width: 96%;
+  height: 100%;
+  min-height: 0;
+}
+.owner .owner-name {
+  position: relative;
+  inset: auto;
+  transform: none;
+  align-self: end;
+}
+.owner-speech::after, .mechanic-speech::after {
+  width: .7cqw;
+  height: .7cqw;
+  bottom: -.4cqw;
+}
+
+/* The customer's portrait has its own column rather than sitting under the bubble. */
+.customer {
+  display: grid;
+  grid-template-columns: 30% minmax(0, 1fr);
+  gap: 3%;
+  align-items: center;
+  padding: 0 .5cqw;
+}
+.customer .customer-art {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.customer .customer-speech {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  min-height: 0;
+  margin-top: .5cqw;
+  padding: 1.5cqw .8cqw .6cqw;
+}
+.customer-speech p { overflow-wrap: anywhere; }
+.modal-heading > div { min-width: 0; }
+
+@media (max-width: 1000px) and (orientation: portrait) {
+  .owner { height: auto; grid-template-rows: auto 150px auto; gap: 14px; }
+  .hoothoot, .klink { top: auto; }
+  .owner .owner-art { width: 100%; height: 150px; }
+  .owner-speech::after, .mechanic-speech::after { width: 8px; height: 8px; bottom: -5px; }
+  .customer { height: auto; min-height: 145px; padding: 0; grid-template-columns: 28% minmax(0, 1fr); gap: 5%; }
+  .customer .customer-art { height: 130px; }
+  .customer .customer-speech { margin: 12px 0 0; padding: 20px 12px 8px; }
+}

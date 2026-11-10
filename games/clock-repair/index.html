@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173d38"><title>부우부와 기어르의 시계 수리점</title></head>
+<body><main class="game-shell">
+<nav class="game-toolbar"><a href="../../">← 방구석 오락실</a><span>HOOTHOOT & KLINK · CLOCK REPAIR SHOP</span><div class="toolbar-actions"><button class="dev-night" type="button" data-dev-night>개발용 · 밤 바로가기</button><button id="fullscreen" type="button">전체 화면 ⛶</button></div></nav>
+<section id="game-stage" class="game-stage" data-shift="day" aria-label="시계 수리점">
+<header class="shop-sign"><span class="crest">⚙</span><div><p>부우부와 기어르의</p><h1>시계 수리점</h1><small>CLOCK REPAIR SHOP</small></div></header>
+<div class="counter"><span id="order-number" class="hud-plaque">주문 1 / 10</span><span id="lives" class="hud-plaque hearts" aria-label="남은 기회">♥♥♥</span><span id="score" class="hud-plaque coins">0원</span></div>
+<section id="shop-team" class="owners" data-mood="ready" aria-label="수리점 운영진">
+<article class="owner hoothoot"><p id="hoothoot-speech" class="speech owner-speech" aria-live="polite">후우~ 어서 오세요!</p><div class="portrait owner-art"><span class="portrait-fallback" aria-hidden="true">🦉</span><img id="hoothoot-sprite" alt="부우부" hidden></div><span class="owner-name">접수 담당 · 부우부</span></article>
+<article class="owner klink"><p id="klink-speech" class="speech mechanic-speech" aria-live="polite">딸깍딸깍! 준비 완료!</p><div class="portrait owner-art"><span class="portrait-fallback" aria-hidden="true">⚙️</span><img id="klink-sprite" alt="기어르" hidden></div><span class="owner-name">정비 담당 · 기어르</span></article>
+</section>
+<aside class="service-panel parchment"><strong id="service-name">⚡ 급행 수리</strong><p id="service-hint">12초 안에 첫 제출 성공 → 팁 +150원</p><span id="combo" data-active="false" aria-live="polite">첫 제출 성공으로 콤보 시작!</span></aside>
+<div id="timer-ring" class="timer-ring"><div class="timer-face"><span>◷</span><strong id="remaining">35초</strong><small>남은 시간</small></div></div>
+<div id="clock" class="clockwork" aria-label="바늘 끝의 화살촉을 드래그해서 맞추는 시계"></div>
+<div class="workbench-trim" aria-hidden="true"></div>
+<section class="customer"><div class="portrait customer-art"><span id="customer-icon" class="portrait-fallback" aria-hidden="true">⚡</span><img id="customer-sprite" alt="피카츄" hidden></div><div class="speech customer-speech"><strong id="customer-name">피카츄</strong><p id="customer-story">약속에 늦지 않게 시계를 맞춰 줄래?</p><span class="dialogue-next" aria-hidden="true">▼</span></div></section>
+<div id="order-panel" class="order-panel parchment"><span id="order-label" class="panel-label">✦ 손님의 주문 시각 ✦</span><strong id="target">-- : -- : --</strong><span id="memory-countdown" class="memory-countdown" hidden></span>
+  <div id="digital-entry" class="digital-entry" role="group" aria-label="시계에서 읽은 시각 입력" hidden>
+    <div class="recorder-display">
+      <div class="lcd-caption"><span>시각 기록</span><span>12H</span></div>
+      <div class="lcd-digits">
+        <label class="lcd-field"><span class="lcd-unit">시</span><span class="lcd-number"><span class="lcd-ghost" aria-hidden="true">88</span><input id="answer-hour" type="number" min="1" max="12" step="1" inputmode="numeric" placeholder="--" autocomplete="off" aria-label="시, 1부터 12까지" disabled></span></label>
+        <span class="lcd-colon" aria-hidden="true">:</span>
+        <label class="lcd-field"><span class="lcd-unit">분</span><span class="lcd-number"><span class="lcd-ghost" aria-hidden="true">88</span><input id="answer-minute" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="--" autocomplete="off" aria-label="분, 0부터 59까지" disabled></span></label>
+      </div>
+    </div>
+    <div class="recorder-controls" aria-label="시각 미세 조정">
+      <div class="recorder-rocker"><span>시 조정</span><div><button type="button" data-answer="hour" data-step="-1" aria-label="시 한 칸 내리기">−</button><button type="button" data-answer="hour" data-step="1" aria-label="시 한 칸 올리기">＋</button></div></div>
+      <div class="recorder-rocker"><span>분 조정</span><div><button type="button" data-answer="minute" data-step="-1" aria-label="분 한 칸 내리기">−</button><button type="button" data-answer="minute" data-step="1" aria-label="분 한 칸 올리기">＋</button></div></div>
+    </div>
+  </div>
+  <p id="order-instruction">아래 시각과 똑같이 맞춰 주세요</p><div class="time-track"><div id="time-fill"></div></div></div>
+<button id="action" class="action" type="button">수리 완료</button>
+</section>
+<div id="touch-controls" class="touch-controls" aria-label="터치 시계 조정" hidden><div class="touch-hand-buttons" role="group" aria-label="바늘 선택"><button id="touch-hour" type="button">시침</button><button id="touch-minute" type="button">분침</button><button id="touch-second" type="button">초침</button></div><div class="touch-step-buttons" role="group" aria-label="선택한 바늘 조정"><button id="touch-minus5" type="button" aria-label="다섯 칸 뒤로">−5</button><button id="touch-minus1" type="button" aria-label="한 칸 뒤로">−1</button><button id="touch-plus1" type="button" aria-label="한 칸 앞으로">+1</button><button id="touch-plus5" type="button" aria-label="다섯 칸 앞으로">+5</button></div></div>
+<dialog id="order-modal" class="order-modal" aria-labelledby="modal-title" aria-describedby="modal-message">
+  <div class="modal-heading"><div class="portrait modal-portrait"><span id="modal-icon" class="portrait-fallback" aria-hidden="true">⚡</span><img id="modal-sprite" alt="피카츄" hidden></div><div><span id="modal-customer" class="modal-customer">피카츄</span><h2 id="modal-title">손님의 요청</h2><p id="modal-message"></p></div></div>
+  <div id="modal-time-block" class="modal-time-block"><span id="modal-time-label">맞춰야 할 시각</span><strong id="modal-time">-- : -- : --</strong><p id="modal-instruction"></p></div>
+  <div id="modal-money" class="modal-money" hidden><span>이번 수리로 받은 금액</span><strong id="modal-total"></strong><p id="modal-tip"></p></div>
+  <p id="modal-summary" class="modal-summary" hidden></p>
+  <p id="modal-meta" class="modal-meta"></p>
+  <button id="modal-action" class="modal-action" type="button" autofocus>수리 시작 →</button><button class="dev-night modal-dev-night" type="button" data-dev-night>개발용 · 밤 주문 바로가기 →</button>
+</dialog>
+<div class="game-caption"><p id="message" role="status" aria-live="polite">손님의 요청을 읽고 시작해 주세요.</p><p id="controls-help" class="help">기록계 숫자 입력 · − / ＋ 미세 조정 · Enter 전달</p></div>
+<footer>낮 주문 10건 + 밤 주문 5건 · 전체 기회 3개 · 오답 −3초 · 오답/시간 초과 시 콤보 초기화 <span>Pokémon 팬 게임 · <a href="https://github.com/PokeAPI/sprites" target="_blank" rel="noopener noreferrer">PokéAPI Sprites</a> · <a id="font-credit" target="_blank" rel="noopener noreferrer">DSEG 글꼴</a> · 배경/기어르: AI 생성 이미지</span></footer>
+</main><script type="module" src="./src/main.js"></script></body></html>
+

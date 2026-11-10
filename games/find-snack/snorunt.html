@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eef7fb" />
+    <title>열매 먹은 눈꼬마 찾기</title>
+  </head>
+  <body data-theme="snorunt">
+    <main>
+      <a class="version-link" href="../../">← 게임 목록</a>
+      <header><a class="brand" href="./snorunt.html">눈꼬마의 눈밭 놀이터 <span>SNORUNT BERRY CLUB</span></a><a class="version-link" href="./">용만이 버전으로 →</a></header>
+      <section class="intro"><div class="eyebrow">눈밭에서 펼쳐지는 열매 추적전!</div><h1>열매 먹은 <em>눈꼬마</em> 찾기</h1><p>똑같이 생긴 세 눈꼬마, 오랭열매를 먹은 친구는 누구일까요?</p></section>
+      <section class="game-shell" aria-label="열매 먹은 눈꼬마 찾기 게임"><div id="game"></div></section>
+      <div id="asset-error" class="asset-error" role="alert" hidden>CDN 스프라이트를 불러오지 못했어요. 인터넷 연결을 확인한 뒤 <a href="./snorunt.html">다시 불러오기</a>를 눌러 주세요.</div>
+      <nav class="stage-shortcuts" aria-label="테스트용 스테이지 바로가기">
+        <div class="stage-caption"><strong>스테이지 바로가기</strong><span>테스트용 · 점수 0 · 재도전 3회로 새로 시작</span></div>
+        <div class="stage-buttons">
+          <button type="button" data-round="1" disabled>STAGE 1 <span>기본</span></button>
+          <button type="button" data-round="2" disabled>STAGE 2 <span>가짜·엇박</span></button>
+          <button type="button" data-round="3" disabled>STAGE 3 <span>연속·방해물</span></button>
+          <button type="button" data-round="4" disabled>STAGE 4 <span>회전 섞기</span></button>
+          <button type="button" data-round="5" disabled>STAGE 5 <span>360도 회전</span></button>
+        </div>
+      </nav>
+      <div class="instructions"><span><b>01</b> 열매 먹는 친구 기억하기</span><i>→</i><span><b>02</b> 움직임 따라가기</span><i>→</i><span><b>03</b> 정답 고르기</span></div>
+      <footer><span>클릭 / 터치 또는 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>으로 선택</span><span>시작·다음 스테이지 <kbd>SPACE</kbd></span></footer>
+      <p class="sprite-credit">스프라이트: <a href="https://github.com/PokeAPI/sprites" target="_blank" rel="noopener noreferrer">PokéAPI Sprites</a> · jsDelivr CDN · Pokémon 팬 게임</p>
+      <p id="status" class="sr-only" aria-live="polite">게임 시작 버튼을 누르세요.</p>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
