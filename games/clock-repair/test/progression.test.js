@@ -261,6 +261,26 @@ test('the first order is a fixed analog clock with blank digital fields and no r
   assert.equal(element('modal-time').textContent, formatTime(scene.request.reference));
 });
 
+test('guidance distinguishes reading, adjusting, and submitting', () => {
+  const { scene, element } = shop();
+  scene.act();
+  assert.equal(element('game-stage').dataset.guide, 'read');
+  assert.equal(element('game-stage').dataset.ready, 'false');
+  assert.match(element('clock-guide').textContent, /읽으세요/);
+  element('answer-hour').value = '03';
+  element('answer-minute').value = '15';
+  scene.updateGuide();
+  assert.equal(element('game-stage').dataset.ready, 'true');
+  answerCorrect(scene, element); scene.act(); scene.act(); scene.act();
+  assert.equal(element('game-stage').dataset.guide, 'set');
+  assert.equal(element('game-stage').dataset.ready, 'false');
+  assert.match(element('clock-guide').textContent, /끌어/);
+  scene.nudge(1);
+  assert.equal(element('game-stage').dataset.ready, 'true');
+  scene.time.now = scene.deadline; scene.update();
+  assert.equal(element('game-stage').dataset.guide, 'off');
+});
+
 test('digital arrows wrap, twelve is accepted, and retry keeps the same clock but clears the input', () => {
   const { scene, element } = shop();
   scene.target = { hour: 0, minute: 0, second: 0 };

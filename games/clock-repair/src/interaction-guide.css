@@ -1,0 +1,85 @@
+.clockwork::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 7%;
+  left: 9%;
+  width: 82%;
+  aspect-ratio: 1;
+  border: 3px solid #f6d37a;
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px #f6d37a33, 0 0 22px #ffe394a8, inset 0 0 20px #ffe39455;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.clock-guide {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 96%;
+  padding: .35em .85em;
+  border: 1px solid #f8dc9b;
+  border-radius: 999px;
+  background: #284a3bea;
+  color: #fff3cf;
+  box-shadow: 0 3px 10px #1b2e23aa;
+  font-size: clamp(12px, 1.2cqw, 17px);
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.game-stage[data-guide='set'] .clockwork::before,
+.game-stage[data-guide='read'] .clockwork::before,
+.game-stage[data-guide='set'] .clock-guide,
+.game-stage[data-guide='read'] .clock-guide {
+  opacity: 1;
+}
+
+.game-stage[data-guide='set'] .clockwork::before,
+.game-stage[data-guide='read'] .clockwork::before {
+  animation: guide-glow 2.8s ease-in-out infinite;
+}
+
+.game-stage[data-guide='set'] .order-panel,
+.game-stage[data-guide='read'] .order-panel {
+  border-color: #f6d37a;
+  box-shadow: 0 0 0 4px #f6d37a66, 0 0 20px #ffe39499, inset 0 0 0 3px #fff3d6;
+}
+
+.game-stage[data-guide='set'] #order-label,
+.game-stage[data-guide='read'] #order-label {
+  color: #754a13;
+  font-weight: 900;
+}
+
+.game-stage[data-guide='read'] .digital-entry input {
+  outline: 2px solid #eed17a;
+  outline-offset: 2px;
+}
+
+.game-stage[data-ready='true'] .action,
+.order-modal[data-kind='request'] .modal-action,
+.order-modal[data-kind='retry'] .modal-action {
+  box-shadow: 0 0 0 4px #f6d37a77, 0 0 24px #ffe394bb, 0 4px 0 #274739;
+}
+
+.order-modal[data-kind='request'] .modal-time-block {
+  border-color: #d3a644;
+  box-shadow: 0 0 0 3px #f5d88780;
+}
+
+@keyframes guide-glow {
+  50% { box-shadow: 0 0 0 7px #f6d37a44, 0 0 30px #ffe394bb, inset 0 0 25px #ffe39477; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-stage[data-guide='set'] .clockwork::before,
+  .game-stage[data-guide='read'] .clockwork::before { animation: none; }
+}

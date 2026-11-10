@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import './style.css';
 import './reading-console.css';
 import './character-layout.css';
+import './interaction-guide.css';
 import fontLicenseUrl from '../assets/DSEG-LICENSE.txt?url';
 import { DAY_ORDER_COUNT, customers, services, createOrderSequence, wrap, formatTime, handAngles, adjustTime, matchesWithin, signedAngleDelta, initialTime, newOrder, repairReward, readDigitalTime } from './time.js';
 import { setPortrait } from './pokemon.js';
@@ -76,6 +77,8 @@ class ClockShop extends Phaser.Scene {
         const selected = this.handAtPointer(pointer, key);
         if (this.phase !== 'playing' || !this.canMove(selected)) return;
         this.select(selected);
+        this.hasAdjusted = true;
+        this.updateGuide();
         this.dragState = { hand: selected, angle: wrap(Math.atan2(pointer.x - center.x, center.y - pointer.y) * 180 / Math.PI, 360), remainder: 0, visualAngle: handAngles(this.current)[selected] };
       });
       grip.on('drag', pointer => {
@@ -102,6 +105,7 @@ class ClockShop extends Phaser.Scene {
     ['answer-hour', 'answer-minute'].forEach(id => {
       const input = $(id);
       input.addEventListener('focus', () => input.select(), options);
+      input.addEventListener('input', () => this.updateGuide(), options);
       input.addEventListener('blur', () => {
         if (/^\d{1,2}$/.test(input.value) && input.validity.valid) input.value = input.value.padStart(2, '0');
       }, options);
@@ -182,6 +186,7 @@ class ClockShop extends Phaser.Scene {
     const valid = input.value !== '' && Number.isInteger(value) && value >= min && value < min + range;
     const next = valid ? wrap(value - min + step, range) + min : step > 0 ? min : min + range - 1;
     input.value = String(next).padStart(2, '0');
+    this.updateGuide();
   }
   showCustomer() {
     const customer = this.customer;
@@ -191,7 +196,7 @@ class ClockShop extends Phaser.Scene {
     $('customer-story').textContent = this.service.request;
     $('service-name').textContent = this.service.name;
     $('service-hint').textContent = this.service.hint;
-    $('order-label').textContent = this.isReading() ? 'HOOTHOOT & KLINK · 시간 기록계' : this.service.offset ? '✦ 기준 시각 ✦' : '✦ 손님의 주문 시각 ✦';
+    $('order-label').textContent = this.isReading() ? '② 읽은 시각을 여기에 입력' : this.service.offset ? '① 기준 시각과 조건 확인' : '① 손님의 주문 시각 확인';
     $('order-instruction').textContent = this.isReading() ? '숫자를 눌러 입력 · 파랑은 시, 초록은 분'
       : this.service.offset
       ? this.service.hint : '아래 시각과 똑같이 맞춰 주세요';
@@ -222,6 +227,16 @@ class ClockShop extends Phaser.Scene {
     if (this.phase !== 'playing' || !this.canMove(this.selected)) return;
     this.current = adjustTime(this.current, this.selected, this.service.reverse ? -amount : amount);
     this.refreshClock();
+    this.hasAdjusted = true;
+    this.updateGuide();
+  }
+  updateGuide() {
+    const playing = this.phase === 'playing';
+    const reading = this.isReading();
+    $('game-stage').dataset.guide = playing ? reading ? 'read' : 'set' : 'off';
+    $('game-stage').dataset.ready = String(playing && (reading
+      ? $('answer-hour').value.trim() !== '' && $('answer-minute').value.trim() !== ''
+      : this.hasAdjusted));
   }
   refreshClock() {
     const angles = handAngles(this.current);
@@ -241,6 +256,7 @@ class ClockShop extends Phaser.Scene {
   }
   enterNight() {
     this.phase = 'dusk';
+    this.updateGuide();
     $('game-stage').dataset.shift = 'night';
     $('order-number').textContent = `밤 주문 1 / ${this.totalOrders - DAY_ORDER_COUNT}`;
     $('message').textContent = '가게 문을 닫자마자 초인종이 다시 울렸다… 밤손님들이 기다리고 있어요.';
@@ -257,6 +273,7 @@ class ClockShop extends Phaser.Scene {
     const reading = this.isReading();
     this.current = initialTime(this.serviceIndex, this.target);
     this.dragState = null;
+    this.hasAdjusted = false;
     if (this.service.onlyHand) this.select(this.service.onlyHand);
     Object.entries(this.handObjects).forEach(([key, hand]) => hand.setVisible(!reading || key !== 'second'));
     Object.entries(this.handGrips).forEach(([key, grip]) => { grip.input.enabled = this.canMove(key); });
@@ -272,13 +289,15 @@ class ClockShop extends Phaser.Scene {
     $('order-panel').dataset.mode = reading ? 'read' : 'set';
     $('answer-hour').value = '';
     $('answer-minute').value = '';
-    $('action').textContent = reading ? '시각 전달하기' : '수리 완료';
+    $('clock-guide').textContent = reading ? '① 시침·분침을 읽으세요' : '② 바늘 끝을 끌어 맞추세요';
+    $('action').textContent = reading ? '③ 시각 전달하기' : '③ 수리 완료';
     $('controls-help').textContent = reading ? '기록계 숫자 입력 · 옆면 − / ＋ 미세 조정 · Enter 전달'
       : '바늘 끝 드래그 · 1 / 2 / 3 바늘 선택 · ← → 미세 조정 · Enter 확인';
     $('message').textContent = reading ? '손님의 요청을 읽고 시계 읽기 시작을 눌러 주세요. 아직 시간은 흐르지 않아요.'
       : '손님의 요청을 읽고 수리 시작을 눌러 주세요. 아직 시간은 흐르지 않아요.';
     this.showRemaining(customer.limit * 1000);
     this.refreshHud();
+    this.updateGuide();
     this.openModal('request', retry ? '다시 한번 부탁할게!' : this.service.name,
       this.service.request, reading ? '시계 읽기 시작 →' : '수리 시작 →');
     $('modal-time-label').textContent = reading ? '이번 주문은 시계 읽기' : this.service.offset ? '기준 시각' : '맞춰야 할 시각';
@@ -298,6 +317,7 @@ class ClockShop extends Phaser.Scene {
     $('order-modal').close();
     $('answer-hour').disabled = !this.isReading();
     $('answer-minute').disabled = !this.isReading();
+    this.updateGuide();
     $('action').focus({ preventScroll: true });
   }
   openModal(kind, title, message, button) {
@@ -374,6 +394,7 @@ class ClockShop extends Phaser.Scene {
     this.totalTips += reward.tip;
     this.score += reward.total;
     this.phase = this.order === this.totalOrders - 1 ? 'won' : 'success';
+    this.updateGuide();
     if (this.phase === 'won') $('game-stage').dataset.shift = 'dawn';
     this.refreshHud();
     this.showRemaining(remaining);
@@ -396,6 +417,7 @@ class ClockShop extends Phaser.Scene {
     this.cleanOrder = false;
     this.combo = 0;
     this.phase = 'retry';
+    this.updateGuide();
     this.setShopMood(this.phase);
     this.showRemaining(0);
     this.refreshHud();
