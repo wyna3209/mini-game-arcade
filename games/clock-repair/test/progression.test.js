@@ -20,10 +20,10 @@ function shop() {
   };
   const context = { Phaser: { Scene: class {} }, fontLicenseUrl: 'font-license', DAY_ORDER_COUNT, createOrderSequence, customers, services, wrap, formatTime, handAngles, adjustTime, moveHandToAngle, matches, matchesWithin, signedAngleDelta, initialTime, setPortrait, repairReward, readDigitalTime, clockThemes, paintClockFace, colorHex,
     newOrder: order => newOrder(order, () => 0.25),
-    newTarget: () => ({ hour: 3, minute: 15, second: 30 }), document: { getElementById: element } };
+    newTarget: () => ({ hour: 3, minute: 15 }), document: { getElementById: element } };
   vm.createContext(context); vm.runInContext(source, context);
   const scene = new context.Shop();
-  Object.assign(scene, { order: 0, score: 0, combo: 0, bestCombo: 0, totalTips: 0, phase: 'ready', handObjects: {}, handGrips: {},
+  Object.assign(scene, { order: 0, score: 0, combo: 0, bestCombo: 0, totalTips: 0, phase: 'ready', selected: 'hour', handObjects: {}, handGrips: {},
     time: { now: 1000 }, cameras: { main: { shake() {} } }, scene: { restart(data) { scene.restarted = true; scene.restartData = data; } } });
   scene.prepareOrder(false);
   return { scene, element };
@@ -140,18 +140,20 @@ test('keyboard adjustments carry time and cannot change a completed order', () =
   scene.order = 1;
   scene.prepareOrder(false);
   scene.act();
-  scene.current = { hour: 11, minute: 59, second: 59 };
-  scene.selected = 'second';
-  scene.nudge(1);
-  assert.equal(formatTime(scene.current), '12 : 00 : 00');
-  scene.nudge(-1);
-  assert.equal(formatTime(scene.current), '11 : 59 : 59');
+  scene.current = { hour: 11, minute: 59 };
+  assert.equal(scene.canMove('second'), false);
+  scene.dragHand('second', 180);
+  assert.equal(formatTime(scene.current), '11 : 59');
   scene.selected = 'minute';
+  scene.nudge(1);
+  assert.equal(formatTime(scene.current), '12 : 00');
+  scene.nudge(-1);
+  assert.equal(formatTime(scene.current), '11 : 59');
   scene.nudge(5);
-  assert.equal(formatTime(scene.current), '12 : 04 : 59');
+  assert.equal(formatTime(scene.current), '12 : 04');
   scene.phase = 'success';
   scene.nudge(1);
-  assert.equal(formatTime(scene.current), '12 : 04 : 59');
+  assert.equal(formatTime(scene.current), '12 : 04');
 });
 
 test('offset orders display a reference but require the calculated target', () => {
@@ -183,7 +185,7 @@ test('mistakes break the combo and retries retain the request without restoring 
   scene.act();
   assert.equal(element('modal-money').hidden, true);
   scene.act();
-  scene.current = { ...scene.target, second: wrap(scene.target.second + 1, 60) };
+  scene.current = { ...scene.target, minute: wrap(scene.target.minute + 1, 60) };
   scene.submit();
   assert.equal(scene.combo, 0);
   assert.equal(scene.cleanOrder, false);
@@ -286,7 +288,7 @@ test('guidance distinguishes reading, adjusting, and submitting', () => {
 
 test('digital arrows wrap, twelve is accepted, and retry keeps the same clock but clears the input', () => {
   const { scene, element } = shop();
-  scene.target = { hour: 0, minute: 0, second: 0 };
+  scene.target = { hour: 0, minute: 0 };
   scene.prepareOrder(true);
   scene.act();
   scene.changeAnswer('hour', -1); scene.changeAnswer('minute', 1);
@@ -339,14 +341,14 @@ test('customer changes repaint one clock face without changing the time or hand 
 test('memory order reveals its time only during the first ten seconds and resets on retry', () => {
   const { scene, element } = shop();
   scene.order = 10; scene.prepareOrder(false);
-  assert.equal(element('target').textContent, '?? : ?? : ??');
+  assert.equal(element('target').textContent, '?? : ??');
   assert.equal(element('modal-time').textContent, '시작 후 10초 공개');
   scene.act();
   assert.equal(element('target').textContent, formatTime(scene.request.reference));
   scene.time.now = scene.startedAt + 9999; scene.update();
   assert.equal(element('target').textContent, formatTime(scene.request.reference));
   scene.time.now = scene.startedAt + 10000; scene.update();
-  assert.equal(element('target').textContent, '?? : ?? : ??');
+  assert.equal(element('target').textContent, '?? : ??');
   scene.time.now = scene.deadline; scene.update(); scene.act(); scene.act();
   assert.equal(element('target').textContent, formatTime(scene.request.reference));
 });
@@ -354,7 +356,7 @@ test('memory order reveals its time only during the first ten seconds and resets
 test('reverse controls invert both nudges and continuous pointer movement', () => {
   const { scene } = shop();
   scene.order = 11; scene.prepareOrder(false); scene.act();
-  scene.current = { hour: 3, minute: 20, second: 10 };
+  scene.current = { hour: 3, minute: 20 };
   const rendered = [];
   scene.handObjects.minute = { setDepth() { return this; }, setAngle(angle) { rendered.push(angle); return this; } };
   scene.selected = 'minute'; scene.nudge(1);
@@ -371,53 +373,56 @@ test('reverse controls invert both nudges and continuous pointer movement', () =
 test('overlapping touch targets choose the nearest movable clock hand', () => {
   const { scene } = shop();
   scene.order = 1; scene.prepareOrder(false); scene.act();
-  scene.current = { hour: 0, minute: 0, second: 0 };
-  assert.equal(scene.handAtPointer({ x: 330, y: 315 - 142 }, 'second'), 'hour');
-  assert.equal(scene.handAtPointer({ x: 330, y: 315 - 206 }, 'second'), 'minute');
+  scene.current = { hour: 0, minute: 0 };
+  assert.equal(scene.handAtPointer({ x: 330, y: 315 - 142 }, 'minute'), 'hour');
+  assert.equal(scene.handAtPointer({ x: 330, y: 315 - 206 }, 'hour'), 'minute');
   scene.order = 13; scene.prepareOrder(false); scene.act();
   assert.equal(scene.handAtPointer({ x: 330, y: 315 - 142 }, 'hour'), 'minute');
 });
 
-test('running clock advances over missed frames and accepts one second of error', () => {
+test('running clock advances a minute per five seconds and accepts one minute of error', () => {
   const { scene } = shop();
   scene.order = 12; scene.prepareOrder(false); scene.act();
-  scene.current = { hour: 11, minute: 59, second: 58 };
-  scene.time.now = scene.startedAt + 2000;
+  scene.current = { hour: 11, minute: 59 };
+  scene.time.now = scene.startedAt + 4999;
   scene.update();
-  assert.equal(formatTime(scene.current), '12 : 00 : 00');
-  scene.current = adjustTime(scene.target, 'second', -1);
+  assert.equal(formatTime(scene.current), '11 : 59');
+  scene.time.now = scene.startedAt + 15000;
+  scene.update();
+  assert.equal(formatTime(scene.current), '12 : 02');
+  scene.current = adjustTime(scene.target, 'minute', -1);
   scene.submit();
   assert.equal(scene.phase, 'success');
 });
 
-test('tied hands lock hour and second while a minute revolution carries the hour', () => {
+test('tied hand locks the hour while a minute revolution carries it', () => {
   const { scene } = shop();
   scene.order = 13; scene.prepareOrder(false); scene.act();
   assert.equal(scene.selected, 'minute');
   const before = formatTime(scene.current);
   scene.select('hour');
   assert.equal(scene.selected, 'minute');
-  scene.selected = 'hour'; scene.nudge(1); scene.dragHand('second', 180);
+  scene.selected = 'hour'; scene.nudge(1); scene.dragHand('hour', 180);
   assert.equal(formatTime(scene.current), before);
   scene.selected = 'minute';
   scene.nudge(60);
   assert.equal(scene.current.hour, wrap(scene.target.hour + 0, 12));
 });
 
-test('touch drag follows finger angle smoothly and carries across twelve', () => {
+test('minute-hand touch drag follows the finger smoothly and carries across twelve', () => {
   const { scene } = shop();
   scene.order = 1; scene.prepareOrder(false); scene.act();
-  scene.current = { hour: 11, minute: 59, second: 58 };
+  scene.current = { hour: 11, minute: 59 };
   const rendered = [];
-  scene.handObjects.second = { setDepth() { return this; }, setAngle(angle) { rendered.push(angle); return this; } };
-  scene.dragState = { hand: 'second', angle: 350, remainder: 0, visualAngle: 348 };
-  scene.dragHand('second', 2);
-  assert.equal(formatTime(scene.current), '12 : 00 : 00');
-  assert.equal(rendered.at(-1), 360);
-  scene.dragHand('second', 5);
-  assert.equal(formatTime(scene.current), '12 : 00 : 00');
-  assert.equal(rendered.at(-1), 363);
-  scene.dragHand('second', 8);
-  assert.equal(formatTime(scene.current), '12 : 00 : 01');
+  scene.handObjects.minute = { setDepth() { return this; }, setAngle(angle) { rendered.push(angle); return this; } };
+  scene.dragState = { hand: 'minute', angle: 350, remainder: 0, visualAngle: 354 };
+  scene.dragHand('minute', 2);
+  assert.equal(formatTime(scene.current), '12 : 01');
   assert.equal(rendered.at(-1), 366);
+  scene.dragHand('minute', 5);
+  assert.equal(formatTime(scene.current), '12 : 01');
+  assert.equal(rendered.at(-1), 369);
+  scene.dragHand('minute', 8);
+  assert.equal(formatTime(scene.current), '12 : 02');
+  assert.equal(rendered.at(-1), 372);
 });

@@ -10,12 +10,12 @@
 <article class="owner hoothoot"><p id="hoothoot-speech" class="speech owner-speech" aria-live="polite">후우~ 어서 오세요!</p><div class="portrait owner-art"><span class="portrait-fallback" aria-hidden="true">🦉</span><img id="hoothoot-sprite" alt="부우부" hidden></div><span class="owner-name">접수 담당 · 부우부</span></article>
 <article class="owner klink"><p id="klink-speech" class="speech mechanic-speech" aria-live="polite">딸깍딸깍! 준비 완료!</p><div class="portrait owner-art"><span class="portrait-fallback" aria-hidden="true">⚙️</span><img id="klink-sprite" alt="기어르" hidden></div><span class="owner-name">정비 담당 · 기어르</span></article>
 </section>
-<aside class="service-panel parchment"><strong id="service-name">⚡ 급행 수리</strong><p id="service-hint">12초 안에 첫 제출 성공 → 팁 +150원</p><span id="combo" data-active="false" aria-live="polite">첫 제출 성공으로 콤보 시작!</span></aside>
-<div id="timer-ring" class="timer-ring"><div class="timer-face"><span>◷</span><strong id="remaining">35초</strong><small>남은 시간</small></div></div>
+<aside class="service-panel parchment"><strong id="service-name">⚡ 시계 읽기</strong><p id="service-hint">시침·분침을 읽어 숫자로 입력</p><span id="combo" data-active="false" aria-live="polite">첫 제출 성공으로 콤보 시작!</span></aside>
+<div id="timer-ring" class="timer-ring"><div class="timer-face"><span>◷</span><strong id="remaining">60초</strong><small>남은 시간</small></div></div>
 <div id="clock" class="clockwork" aria-label="아날로그 시계"><span id="clock-guide" class="clock-guide" aria-hidden="true"></span></div>
 <div class="workbench-trim" aria-hidden="true"></div>
 <section class="customer"><div class="portrait customer-art"><span id="customer-icon" class="portrait-fallback" aria-hidden="true">⚡</span><img id="customer-sprite" alt="피카츄" hidden></div><div class="speech customer-speech"><strong id="customer-name">피카츄</strong><p id="customer-story">약속에 늦지 않게 시계를 맞춰 줄래?</p><span class="dialogue-next" aria-hidden="true">▼</span></div></section>
-<div id="order-panel" class="order-panel parchment"><span id="order-label" class="panel-label">✦ 손님의 주문 시각 ✦</span><strong id="target">-- : -- : --</strong><span id="memory-countdown" class="memory-countdown" hidden></span>
+<div id="order-panel" class="order-panel parchment"><span id="order-label" class="panel-label">✦ 손님의 주문 시각 ✦</span><strong id="target">-- : --</strong><span id="memory-countdown" class="memory-countdown" hidden></span>
   <div id="digital-entry" class="digital-entry" role="group" aria-label="시계에서 읽은 시각 입력" hidden>
     <div class="recorder-display">
       <div class="lcd-caption"><span>시각 기록</span><span>12H</span></div>
@@ -35,7 +35,7 @@
 </section>
 <dialog id="order-modal" class="order-modal" aria-labelledby="modal-title" aria-describedby="modal-message">
   <div class="modal-heading"><div class="portrait modal-portrait"><span id="modal-icon" class="portrait-fallback" aria-hidden="true">⚡</span><img id="modal-sprite" alt="피카츄" hidden></div><div><span id="modal-customer" class="modal-customer">피카츄</span><h2 id="modal-title">손님의 요청</h2><p id="modal-message"></p></div></div>
-  <div id="modal-time-block" class="modal-time-block"><span id="modal-time-label">맞춰야 할 시각</span><strong id="modal-time">-- : -- : --</strong><p id="modal-instruction"></p></div>
+  <div id="modal-time-block" class="modal-time-block"><span id="modal-time-label">맞춰야 할 시각</span><strong id="modal-time">-- : --</strong><p id="modal-instruction"></p></div>
   <div id="modal-money" class="modal-money" hidden><span>이번 수리로 받은 금액</span><strong id="modal-total"></strong><p id="modal-tip"></p></div>
   <p id="modal-summary" class="modal-summary" hidden></p>
   <p id="modal-meta" class="modal-meta"></p>

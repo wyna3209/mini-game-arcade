@@ -12,7 +12,6 @@ const center = { x: 330, y: 315 };
 const hands = {
   hour: { length: 142, color: 0x387fa7, width: 18, tipWidth: 30, tipHeight: 30 },
   minute: { length: 206, color: 0x6a9b58, width: 9, tipWidth: 20, tipHeight: 27 },
-  second: { length: 244, color: 0xc2624d, width: 3, tipWidth: 10, tipHeight: 19 },
 };
 const $ = id => document.getElementById(id);
 
@@ -32,7 +31,7 @@ class ClockShop extends Phaser.Scene {
     this.totalTips = 0;
     this.phase = 'ready';
     this.selected = 'hour';
-    this.current = { hour: 0, minute: 0, second: 0 };
+    this.current = { hour: 0, minute: 0 };
     this.handObjects = {};
     this.handGrips = {};
     $('game-stage').dataset.shift = 'day';
@@ -130,7 +129,7 @@ class ClockShop extends Phaser.Scene {
         }
         return;
       }
-      const key = { Digit1: 'hour', Digit2: 'minute', Digit3: 'second' }[event.code];
+      const key = { Digit1: 'hour', Digit2: 'minute' }[event.code];
       if (key) { event.preventDefault(); this.select(key); }
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
         event.preventDefault();
@@ -160,7 +159,7 @@ class ClockShop extends Phaser.Scene {
       available.includes(fallback) ? fallback : available[0] ?? fallback);
   }
   isReading() { return this.service.mode === 'read'; }
-  canMove(hand) { return !this.isReading() && (!this.service.onlyHand || this.service.onlyHand === hand); }
+  canMove(hand) { return hand in hands && !this.isReading() && (!this.service.onlyHand || this.service.onlyHand === hand); }
   dragHand(hand, angle) {
     if (this.phase !== 'playing' || !this.canMove(hand)) return;
     this.select(hand);
@@ -275,15 +274,14 @@ class ClockShop extends Phaser.Scene {
     this.current = initialTime(this.serviceIndex, this.target);
     this.dragState = null;
     this.hasAdjusted = false;
-    if (this.service.onlyHand) this.select(this.service.onlyHand);
-    Object.entries(this.handObjects).forEach(([key, hand]) => hand.setVisible(!reading || key !== 'second'));
+    this.select(this.service.onlyHand || 'hour');
     Object.entries(this.handGrips).forEach(([key, grip]) => { grip.input.enabled = this.canMove(key); });
     this.refreshClock();
     this.phase = 'briefing';
     $('order-number').textContent = this.order < DAY_ORDER_COUNT ? `낮 주문 ${this.order + 1} / ${DAY_ORDER_COUNT}` : `밤 주문 ${this.order - DAY_ORDER_COUNT + 1} / ${this.totalOrders - DAY_ORDER_COUNT}`;
     this.showCustomer();
     $('target').hidden = reading;
-    $('target').textContent = reading ? '' : this.service.memory ? '?? : ?? : ??' : formatTime(this.request.reference);
+    $('target').textContent = reading ? '' : this.service.memory ? '?? : ??' : formatTime(this.request.reference);
     $('memory-countdown').hidden = !this.service.memory;
     $('memory-countdown').textContent = this.service.memory ? '시작하면 10초 동안 주문 시각 공개' : '';
     $('digital-entry').hidden = !reading;
@@ -293,7 +291,7 @@ class ClockShop extends Phaser.Scene {
     $('clock-guide').textContent = reading ? '① 시침·분침을 읽으세요' : '② 바늘 끝을 끌어 맞추세요';
     $('action').textContent = reading ? '③ 시각 전달하기' : '③ 수리 완료';
     $('controls-help').textContent = reading ? '기록계 숫자 입력 · 옆면 − / ＋ 미세 조정 · Enter 전달'
-      : '바늘 끝 드래그 · 1 / 2 / 3 바늘 선택 · ← → 미세 조정 · Enter 확인';
+      : '시침·분침 끝 드래그 · 1 / 2 바늘 선택 · ← → 미세 조정 · Enter 확인';
     $('message').textContent = reading ? '손님의 요청을 읽고 시계 읽기 시작을 눌러 주세요. 아직 시간은 흐르지 않아요.'
       : '손님의 요청을 읽고 수리 시작을 눌러 주세요. 아직 시간은 흐르지 않아요.';
     this.showRemaining(customer.limit * 1000);
@@ -347,7 +345,7 @@ class ClockShop extends Phaser.Scene {
     if (this.service.memory) {
       const memoryLeft = Math.max(0, this.service.memory - Math.floor((this.time.now - this.startedAt) / 1000));
       $('memory-countdown').textContent = memoryLeft ? `주문서 소멸까지 ${memoryLeft}초` : '주문서가 사라졌어요! 기억을 더듬어 보세요';
-      if (!memoryLeft) $('target').textContent = '?? : ?? : ??';
+      if (!memoryLeft) $('target').textContent = '?? : ??';
     }
     const remaining = Math.max(0, this.deadline - this.time.now);
     this.showRemaining(remaining);
@@ -355,9 +353,9 @@ class ClockShop extends Phaser.Scene {
   }
   tickRunningClock() {
     if (this.phase !== 'playing' || !this.service.ticking) return;
-    const tick = Math.max(0, Math.floor((this.time.now - this.startedAt) / 1000));
+    const tick = Math.max(0, Math.floor((this.time.now - this.startedAt) / 5000));
     if (tick > this.lastTick) {
-      this.current = adjustTime(this.current, 'second', tick - this.lastTick);
+      this.current = adjustTime(this.current, 'minute', tick - this.lastTick);
       this.lastTick = tick;
       this.refreshClock();
     }
