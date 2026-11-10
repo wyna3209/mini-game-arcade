@@ -63,27 +63,7 @@ class ShuffleScene extends Phaser.Scene {
     });
     ['ONE', 'TWO', 'THREE'].forEach((key, index) => this.input.keyboard.on(`keydown-${key}`, () => this.choose(index)));
     this.updateHud();
-    this.bindStageShortcuts();
     if (data.autoStart) this.startRound();
-  }
-
-  bindStageShortcuts() {
-    const controls = document.querySelector('.stage-buttons');
-    const buttons = [...controls.querySelectorAll('button[data-round]')];
-    buttons.forEach(button => { button.disabled = false; });
-    const jump = event => {
-      const button = event.target.closest('button[data-round]');
-      if (!button || !controls.contains(button)) return;
-      buttons.forEach(item => { item.disabled = true; });
-      button.blur();
-      // Restart shuts down the old Scene's timers, tweens, objects and input listeners.
-      this.scene.restart({ round: Number(button.dataset.round), autoStart: true });
-    };
-    controls.addEventListener('click', jump);
-    this.events.once('shutdown', () => {
-      controls.removeEventListener('click', jump);
-      buttons.forEach(button => { button.disabled = true; });
-    });
   }
 
   label(x, y, text, size = 16, color = C.ink, weight = '500') {
@@ -161,10 +141,6 @@ class ShuffleScene extends Phaser.Scene {
 
   readBest() { try { return Number(localStorage.getItem(scoreStorageKey)) || 0; } catch { return 0; } }
   updateHud() {
-    document.querySelectorAll('.stage-buttons button').forEach(button => {
-      if (Number(button.dataset.round) === this.round) button.setAttribute('aria-current', 'step');
-      else button.removeAttribute('aria-current');
-    });
     this.roundLabel.setText(`${hellMode ? 'HELL · ' : ''}STAGE ${this.round} / ${TOTAL_STAGES}`);
     this.scoreLabel.setText(`점수 ${this.score}   /   최고 ${this.best}`);
     this.lifeLabel.setText(`재도전 ${this.lives}회  ${'♥'.repeat(this.lives)}${'♡'.repeat(3 - this.lives)}`);

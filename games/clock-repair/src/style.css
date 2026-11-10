@@ -30,24 +30,8 @@
 .order-modal[data-kind=dusk] .modal-action{background:linear-gradient(#806cb0,#554373);box-shadow:0 4px 0 #2c2242}
 @keyframes night-glimmer{to{opacity:.3;transform:translateY(4px)}}
 @media(max-width:1000px) and (orientation:portrait){.memory-countdown{font-size:11px}}
-.toolbar-actions{display:flex;align-items:center;gap:8px}
-.game-toolbar .dev-night{color:#f5dfb2;border-color:#c7a97088;background:#604a3466;font-weight:800;white-space:nowrap}
-.game-toolbar .dev-night:hover{background:#876242}
-.modal-dev-night{display:block;width:100%;margin-top:13px;padding:9px;border:1px dashed #b79b7e;border-radius:9px;background:#fff9ea;color:#70563e;font:700 13px 'Noto Sans KR',sans-serif}
-.modal-dev-night:hover{background:#f5e8cf}
-@media(max-width:700px){.game-toolbar .dev-night{font-size:9px;padding:4px 6px}.toolbar-actions{gap:4px}}
 
-.touch-controls{display:none}
-@media (pointer:coarse){
-  body{padding-bottom:116px}
-  .touch-controls:not([hidden]){display:grid;gap:7px;position:fixed;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:30;width:min(680px,calc(100% - 16px));padding:9px;border:2px solid #d8bd8d;border-radius:16px;background:#203c36f2;box-shadow:0 8px 30px #0008;backdrop-filter:blur(8px)}
-  .touch-hand-buttons,.touch-step-buttons{display:flex;gap:7px}
-  .touch-controls button{flex:1;min-width:0;min-height:44px;padding:6px 4px;border:1px solid #b99f70;border-radius:9px;background:#f2e2b8;color:#4a392b;font-size:15px;font-weight:800;touch-action:manipulation}
-  .touch-controls button[data-selected=true]{background:#72aa8f;color:#123b2f;border-color:#bce1ba}
-  .touch-controls button:disabled{opacity:.45}
-  .touch-step-buttons button{background:#fff4d2;font-variant-numeric:tabular-nums}
-  .clockwork canvas{touch-action:none}
-}
+@media (pointer:coarse){.clockwork canvas{touch-action:none}}
 @media (max-width:1000px) and (orientation:portrait){
   .clockwork{width:min(100%,560px);justify-self:center;margin:0 auto}
   .game-stage{row-gap:11px}

@@ -1,6 +1,24 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { wrap, formatTime, handAngles, valueFromAngle, adjustTime, moveHandToAngle, matches, newTarget, newOrder, repairReward, customers, readDigitalTime } from '../src/time.js';
+import { DAY_ORDER_COUNT, NIGHT_ORDER_COUNT, TOTAL_ORDER_COUNT, createOrderSequence, wrap, formatTime, handAngles, valueFromAngle, adjustTime, moveHandToAngle, matches, newTarget, newOrder, repairReward, customers, readDigitalTime } from '../src/time.js';
+
+test('night deck reshuffles five types twice without adjacent duplicates', () => {
+  assert.equal(NIGHT_ORDER_COUNT, 10);
+  assert.equal(TOTAL_ORDER_COUNT, 20);
+  const layouts = new Set();
+  for (let seed = 1; seed <= 24; seed++) {
+    let state = seed;
+    const random = () => { state = (state * 1664525 + 1013904223) >>> 0; return state / 2 ** 32; };
+    const sequence = createOrderSequence(random);
+    assert.deepEqual(sequence.slice(0, DAY_ORDER_COUNT), Array.from({ length: DAY_ORDER_COUNT }, (_, index) => index));
+    assert.equal(sequence.length, TOTAL_ORDER_COUNT);
+    const night = sequence.slice(DAY_ORDER_COUNT);
+    for (let type = DAY_ORDER_COUNT; type < customers.length; type++) assert.equal(night.filter(value => value === type).length, 2);
+    assert.ok(night.every((type, index) => index === 0 || type !== night[index - 1]));
+    layouts.add(night.join(','));
+  }
+  assert.ok(layouts.size > 1, 'a new run can produce a different night order');
+});
 
 test('all clock hand angles convert back to the original time, including near midnight', () => {
   for (let hour = 0; hour < 12; hour++) for (let minute = 0; minute < 60; minute++) for (const second of [0, 1, 29, 59]) {

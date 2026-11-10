@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
-import { DAY_ORDER_COUNT, customers, services, wrap, formatTime, handAngles, adjustTime, moveHandToAngle, matches, matchesWithin, signedAngleDelta, initialTime, newOrder, repairReward, readDigitalTime } from '../src/time.js';
+import { DAY_ORDER_COUNT, TOTAL_ORDER_COUNT, createOrderSequence, customers, services, wrap, formatTime, handAngles, adjustTime, moveHandToAngle, matches, matchesWithin, signedAngleDelta, initialTime, newOrder, repairReward, readDigitalTime } from '../src/time.js';
 import { setPortrait } from '../src/pokemon.js';
 import { clockThemes, paintClockFace, colorHex } from '../src/clock-themes.js';
 
@@ -18,7 +18,7 @@ function shop() {
       open: false, showModal() { this.open = true; }, close() { this.open = false; } });
     return elements.get(id);
   };
-  const context = { Phaser: { Scene: class {} }, fontLicenseUrl: 'font-license', DAY_ORDER_COUNT, customers, services, wrap, formatTime, handAngles, adjustTime, moveHandToAngle, matches, matchesWithin, signedAngleDelta, initialTime, setPortrait, repairReward, readDigitalTime, clockThemes, paintClockFace, colorHex,
+  const context = { Phaser: { Scene: class {} }, fontLicenseUrl: 'font-license', DAY_ORDER_COUNT, createOrderSequence, customers, services, wrap, formatTime, handAngles, adjustTime, moveHandToAngle, matches, matchesWithin, signedAngleDelta, initialTime, setPortrait, repairReward, readDigitalTime, clockThemes, paintClockFace, colorHex,
     newOrder: order => newOrder(order, () => 0.25),
     newTarget: () => ({ hour: 3, minute: 15, second: 30 }), document: { getElementById: element } };
   vm.createContext(context); vm.runInContext(source, context);
@@ -38,26 +38,29 @@ function answerCorrect(scene, element) {
 
 test('day and night orders show requests, itemized payment, and a final summary', () => {
   const { scene, element } = shop();
+  scene.orderSequence = createOrderSequence(() => 0.5);
+  scene.prepareOrder(false);
   scene.act();
-  for (let order = 0; order < customers.length; order++) {
+  for (let order = 0; order < TOTAL_ORDER_COUNT; order++) {
+    const customer = customers[scene.orderSequence[order]];
     assert.equal(scene.phase, 'playing');
     assert.equal(scene.order, order);
-    assert.equal(element('customer-name').textContent, customers[order].name);
-    assert.match(element('customer-sprite').src, new RegExp(`/${customers[order].id}\\.png$`));
+    assert.equal(element('customer-name').textContent, customer.name);
+    assert.match(element('customer-sprite').src, new RegExp(`/${customer.id}\\.png$`));
     assert.equal(element('shop-team').dataset.mood, 'working');
     answerCorrect(scene, element);
     scene.act();
-    assert.equal(scene.phase, order === customers.length - 1 ? 'won' : 'success');
+    assert.equal(scene.phase, order === TOTAL_ORDER_COUNT - 1 ? 'won' : 'success');
     assert.equal(element('shop-team').dataset.mood, scene.phase);
-    assert.match(element('message').textContent, new RegExp(customers[order].thanks.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(element('message').textContent, new RegExp(customer.thanks.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     assert.equal(element('order-modal').open, true);
     assert.equal(element('modal-money').hidden, false);
-    assert.equal(element('modal-message').textContent, customers[order].thanks);
+    assert.equal(element('modal-message').textContent, customer.thanks);
     assert.match(element('modal-total').textContent, /^\+[\d,]+원$/);
     const paid = scene.score;
     scene.submit();
     assert.equal(scene.score, paid, 'completion cannot pay twice');
-    if (order < customers.length - 1) {
+    if (order < TOTAL_ORDER_COUNT - 1) {
       scene.act();
       if (order === DAY_ORDER_COUNT - 1) {
         assert.equal(scene.phase, 'dusk');
@@ -71,32 +74,29 @@ test('day and night orders show requests, itemized payment, and a final summary'
     }
   }
   assert.equal(scene.lives, 3);
-  assert.equal(scene.combo, 15);
-  assert.equal(scene.bestCombo, 15);
+  assert.equal(scene.combo, TOTAL_ORDER_COUNT);
+  assert.equal(scene.bestCombo, TOTAL_ORDER_COUNT);
   assert.ok(scene.totalTips > 0);
   assert.ok(scene.score > 1500);
   assert.equal(element('modal-summary').hidden, false);
-  assert.match(element('modal-summary').textContent, /주문 15건/);
+  assert.match(element('modal-summary').textContent, /주문 20건/);
   assert.equal(element('game-stage').dataset.shift, 'dawn');
   scene.act(); assert.equal(scene.restarted, true);
 });
 
-test('developer shortcut starts at the first night order with fresh lives and the night scene', () => {
+test('new games start at the first day order with a shuffled twenty-order deck', () => {
   const { scene, element } = shop();
-  scene.lives = 1; scene.score = 950;
-  scene.jumpToNight();
-  assert.equal(scene.restartData.startOrder, DAY_ORDER_COUNT);
-  assert.equal(element('order-modal').open, false);
   scene.drawClock = () => {}; scene.bindControls = () => {};
-  scene.create(scene.restartData);
-  assert.equal(scene.order, DAY_ORDER_COUNT);
+  scene.create();
+  assert.equal(scene.order, 0);
+  assert.equal(scene.orderSequence.length, TOTAL_ORDER_COUNT);
   assert.equal(scene.lives, 3);
   assert.equal(scene.score, 0);
   assert.equal(scene.phase, 'briefing');
-  assert.equal(element('game-stage').dataset.shift, 'night');
-  assert.equal(element('customer-name').textContent, customers[DAY_ORDER_COUNT].name);
+  assert.equal(element('game-stage').dataset.shift, 'day');
+  assert.equal(element('customer-name').textContent, customers[0].name);
   assert.equal(element('order-modal').open, true);
-  assert.equal(element('target').textContent, '?? : ?? : ??');
+  assert.equal(element('target').hidden, true);
 });
 
 test('wrong answers cost time and three timeouts end the run without replenishing chances', () => {
@@ -335,13 +335,27 @@ test('reverse controls invert both nudges and continuous pointer movement', () =
   const { scene } = shop();
   scene.order = 11; scene.prepareOrder(false); scene.act();
   scene.current = { hour: 3, minute: 20, second: 10 };
+  const rendered = [];
+  scene.handObjects.minute = { setDepth() { return this; }, setAngle(angle) { rendered.push(angle); return this; } };
   scene.selected = 'minute'; scene.nudge(1);
   assert.equal(scene.current.minute, 19);
-  scene.dragState = { hand: 'minute', angle: 120, remainder: 0 };
+  scene.dragState = { hand: 'minute', angle: 120, remainder: 0, visualAngle: 120 };
   scene.dragHand('minute', 132);
   assert.equal(scene.current.minute, 17);
+  assert.equal(rendered.at(-1), 108);
   scene.dragHand('minute', 126);
   assert.equal(scene.current.minute, 18);
+  assert.equal(rendered.at(-1), 114);
+});
+
+test('overlapping touch targets choose the nearest movable clock hand', () => {
+  const { scene } = shop();
+  scene.order = 1; scene.prepareOrder(false); scene.act();
+  scene.current = { hour: 0, minute: 0, second: 0 };
+  assert.equal(scene.handAtPointer({ x: 330, y: 315 - 142 }, 'second'), 'hour');
+  assert.equal(scene.handAtPointer({ x: 330, y: 315 - 206 }, 'second'), 'minute');
+  scene.order = 13; scene.prepareOrder(false); scene.act();
+  assert.equal(scene.handAtPointer({ x: 330, y: 315 - 142 }, 'hour'), 'minute');
 });
 
 test('running clock advances over missed frames and accepts one second of error', () => {
@@ -370,18 +384,20 @@ test('tied hands lock hour and second while a minute revolution carries the hour
   assert.equal(scene.current.hour, wrap(scene.target.hour + 0, 12));
 });
 
-test('tablet controls expose only usable hands and follow reverse-clock rules', () => {
-  const { scene, element } = shop();
-  assert.equal(element('touch-controls').hidden, true);
-  scene.order = 11; scene.prepareOrder(false); scene.act();
-  assert.equal(element('touch-controls').hidden, false);
-  scene.select('minute');
-  assert.equal(element('touch-minute').dataset.selected, 'true');
-  const minute = scene.current.minute;
-  scene.nudge(1);
-  assert.equal(scene.current.minute, wrap(minute - 1, 60));
-  scene.order = 13; scene.prepareOrder(false);
-  assert.equal(element('touch-hour').disabled, true);
-  assert.equal(element('touch-minute').disabled, false);
-  assert.equal(element('touch-second').disabled, true);
+test('touch drag follows finger angle smoothly and carries across twelve', () => {
+  const { scene } = shop();
+  scene.order = 1; scene.prepareOrder(false); scene.act();
+  scene.current = { hour: 11, minute: 59, second: 58 };
+  const rendered = [];
+  scene.handObjects.second = { setDepth() { return this; }, setAngle(angle) { rendered.push(angle); return this; } };
+  scene.dragState = { hand: 'second', angle: 350, remainder: 0, visualAngle: 348 };
+  scene.dragHand('second', 2);
+  assert.equal(formatTime(scene.current), '12 : 00 : 00');
+  assert.equal(rendered.at(-1), 360);
+  scene.dragHand('second', 5);
+  assert.equal(formatTime(scene.current), '12 : 00 : 00');
+  assert.equal(rendered.at(-1), 363);
+  scene.dragHand('second', 8);
+  assert.equal(formatTime(scene.current), '12 : 00 : 01');
+  assert.equal(rendered.at(-1), 366);
 });

@@ -16,6 +16,25 @@ export const customers = [
   { id: 354, icon: '🧵', name: '다크펫', thanks: '실이 풀렸어… 이제 내 시계도 다시 움직일 수 있어.', limit: 40 },
   { id: 94, icon: '😈', name: '팬텀', thanks: '크크… 벌써 해가 뜨네. 오늘 밤은 네가 이겼어!', limit: 35 },
 ];
+export const NIGHT_TYPE_COUNT = customers.length - DAY_ORDER_COUNT;
+export const NIGHT_ORDER_COUNT = NIGHT_TYPE_COUNT * 2;
+export const TOTAL_ORDER_COUNT = DAY_ORDER_COUNT + NIGHT_ORDER_COUNT;
+
+export function createOrderSequence(random = Math.random) {
+  const day = Array.from({ length: DAY_ORDER_COUNT }, (_, index) => index);
+  const night = Array.from({ length: NIGHT_ORDER_COUNT }, (_, index) => DAY_ORDER_COUNT + index % NIGHT_TYPE_COUNT);
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const shuffled = [...night];
+    for (let index = shuffled.length - 1; index > 0; index--) {
+      const swapIndex = Math.floor(random() * (index + 1));
+      [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+    }
+    if (shuffled.every((type, index) => index === 0 || type !== shuffled[index - 1])) return [...day, ...shuffled];
+  }
+  // A deterministic, non-adjacent fallback for fixed test RNGs.
+  return [...day, ...Array.from({ length: NIGHT_TYPE_COUNT }, (_, index) => DAY_ORDER_COUNT + index),
+    ...Array.from({ length: NIGHT_TYPE_COUNT }, (_, index) => DAY_ORDER_COUNT + index)];
+}
 
 export const wrap = (value, max) => ((value % max) + max) % max;
 export function formatTime(time) {
@@ -95,10 +114,10 @@ export function readDigitalTime(hourText, minuteText) {
   return { hour: hour % 12, minute, second: 0 };
 }
 
-export function repairReward(order, remaining, elapsed, clean, combo) {
+export function repairReward(order, remaining, elapsed, clean, combo, serviceOrder = order) {
   const nextCombo = clean ? combo + 1 : 0;
-  const perfect = clean && elapsed <= customers[order].limit * 500;
-  const service = services[order];
+  const perfect = clean && elapsed <= customers[serviceOrder].limit * 500;
+  const service = services[serviceOrder];
   const special = clean && ((service.quickTip && elapsed <= service.quickTip * 1000) || service.firstTryTip) ? 150 : 0;
   const tip = nextCombo * 50 + (perfect ? 100 : 0) + special;
   const base = (order + 1) * 100 + Math.ceil(remaining / 1000) * 10;
