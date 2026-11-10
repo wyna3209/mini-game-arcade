@@ -25,7 +25,6 @@ class ClockShop extends Phaser.Scene {
     $('font-credit').href = fontLicenseUrl;
     this.orderSequence = createOrderSequence();
     this.order = 0;
-    this.lives = 3;
     this.score = 0;
     this.combo = 0;
     this.bestCombo = 0;
@@ -214,7 +213,6 @@ class ClockShop extends Phaser.Scene {
       working: [`후우~ ${this.customer.name}의 주문이야. 시각을 잘 봐 줘!`, this.isReading() ? '시계는 고정해 둘게! 시침과 분침을 읽어 숫자로 적어 줘!' : '드르륵… 톱니바퀴는 내가 맡을게! 바늘을 맞춰 줘!'],
       success: ['후우! 딱 맞아! 우리 수리점, 제법이지?', '찰칵! 수리 완료! 다음 손님도 맡겨 줘!'],
       retry: ['후우… 괜찮아. 같은 주문으로 다시 해 보자!', '딸깍! 도구를 다시 정비해 둘게. 천천히, 정확하게!'],
-      over: ['오늘은 여기까지! 다음에 또 같이 수리하자.', '끼익… 잠깐 충전하고 다시 가게를 열자!'],
       won: ['후우~ 모든 손님이 웃고 돌아갔어! 정말 고마워!', '딩동! 오늘도 완벽한 하루! 우리 가게 최고의 수리공이야!'],
     };
     $('hoothoot-speech').textContent = lines[mood][0];
@@ -234,7 +232,7 @@ class ClockShop extends Phaser.Scene {
     if (this.phase === 'playing') { this.submit(); return; }
     if (this.phase === 'briefing') { this.beginOrder(); return; }
     if (this.phase === 'dusk') { this.prepareOrder(false); return; }
-    if (['won', 'over'].includes(this.phase)) { $('order-modal').close(); this.scene.restart(); return; }
+    if (this.phase === 'won') { $('order-modal').close(); this.scene.restart(); return; }
     if (this.phase === 'success') {
       this.order++;
       if (this.order === DAY_ORDER_COUNT) { this.enterNight(); return; }
@@ -246,7 +244,7 @@ class ClockShop extends Phaser.Scene {
     $('game-stage').dataset.shift = 'night';
     $('order-number').textContent = `밤 주문 1 / ${this.totalOrders - DAY_ORDER_COUNT}`;
     $('message').textContent = '가게 문을 닫자마자 초인종이 다시 울렸다… 밤손님들이 기다리고 있어요.';
-    this.openModal('dusk', '문을 닫았는데… 종이 울렸다', '밤이 되자 시계가 이상하게 움직이기 시작했어요. 주문서가 사라지고 톱니가 거꾸로 돌아갑니다. 남은 기회와 수리비를 가지고 밤 영업을 시작해요!', '밤 영업 시작 →');
+    this.openModal('dusk', '문을 닫았는데… 종이 울렸다', '밤이 되자 시계가 이상하게 움직이기 시작했어요. 주문서가 사라지고 톱니가 거꾸로 돌아갑니다. 수리비와 콤보를 가지고 밤 영업을 시작해요!', '밤 영업 시작 →');
     $('modal-meta').textContent = `낮 주문 ${DAY_ORDER_COUNT}건 완료 · 밤 주문 ${this.totalOrders - DAY_ORDER_COUNT}건 남음`;
   }
   prepareOrder(retry) {
@@ -316,7 +314,7 @@ class ClockShop extends Phaser.Scene {
     $('modal-action').textContent = button;
     $('modal-time-block').hidden = kind !== 'request';
     $('modal-money').hidden = kind !== 'success' && kind !== 'won';
-    $('modal-summary').hidden = kind !== 'won' && kind !== 'over';
+    $('modal-summary').hidden = kind !== 'won';
     $('modal-meta').textContent = `주문 ${this.order + 1} / ${this.totalOrders}`;
     if (!modal.open) modal.showModal();
     $('modal-action').focus({ preventScroll: true });
@@ -395,22 +393,19 @@ class ClockShop extends Phaser.Scene {
   }
   timeout() {
     if (this.phase !== 'playing') return;
-    this.lives--;
     this.cleanOrder = false;
     this.combo = 0;
-    this.phase = this.lives > 0 ? 'retry' : 'over';
+    this.phase = 'retry';
     this.setShopMood(this.phase);
     this.showRemaining(0);
     this.refreshHud();
-    $('message').textContent = this.lives > 0 ? '시간이 다 됐어요! 같은 손님의 시계를 다시 수리할 수 있어요.' : '오늘의 수리 기회를 모두 썼어요. 잠깐 쉬고 다시 가게를 열어 볼까요?';
-    this.openModal(this.phase, this.lives > 0 ? '조금만 더! 다시 해 볼까요?' : '오늘은 잠시 쉬어 가요',
-      $('message').textContent, this.lives > 0 ? '같은 주문 다시 받기 →' : '가게 다시 열기 ↻');
-    $('modal-meta').textContent = `남은 기회 ${this.lives}개 · 같은 주문을 다시 받아도 첫 제출 보너스는 돌아오지 않아요`;
-    if (this.phase === 'over') $('modal-summary').textContent = `완료한 주문 ${this.order} / ${this.totalOrders}건 · 총 수리비 ${this.score.toLocaleString('ko-KR')}원 · 최고 ${this.bestCombo}콤보`;
+    $('message').textContent = '시간이 다 됐어요! 같은 손님의 시계를 다시 수리할 수 있어요.';
+    this.openModal('retry', '조금만 더! 다시 해 볼까요?', $('message').textContent, '같은 주문 다시 받기 →');
+    $('modal-meta').textContent = '재도전 횟수 제한 없음 · 같은 주문을 다시 받아도 첫 제출 보너스는 돌아오지 않아요';
   }
   refreshHud() {
     $('score').textContent = `${this.score.toLocaleString('ko-KR')}원`;
-    $('lives').textContent = `${'♥'.repeat(this.lives)}${'♡'.repeat(3 - this.lives)}`;
+    $('lives').textContent = '재도전 ∞';
     $('combo').textContent = this.combo > 0 ? `✦ ${this.combo} COMBO` : '첫 제출 성공으로 콤보 시작!';
     $('combo').dataset.active = String(this.combo > 0);
   }

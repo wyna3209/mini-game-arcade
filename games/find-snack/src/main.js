@@ -41,14 +41,13 @@ class ShuffleScene extends Phaser.Scene {
     this.round = Math.max(1, Math.min(TOTAL_STAGES, Number(data.round) || 1));
     this.nextStage = false;
     this.score = 0;
-    this.lives = 3;
     this.phase = 'ready';
     this.people = [];
     this.best = this.readBest();
     this.drawStage();
     slots.forEach((x, index) => this.people.push(this.makePerson(x, index)));
     this.heading = this.label(480, 118, '누가 떡을 먹었을까요?', 26, C.ink, '800');
-    this.hint = this.label(480, 158, hellMode ? 'HELL MODE · 눈꼬마 5단계 다음부터 시작 · 재도전 3회' : '총 5스테이지 · 전체 재도전 3회! 끝까지 찾아보세요.', 14, C.muted);
+    this.hint = this.label(480, 158, hellMode ? 'HELL MODE · 눈꼬마 5단계 다음부터 시작 · 무한 재도전' : '총 5스테이지 · 각 스테이지 무한 재도전! 끝까지 찾아보세요.', 14, C.muted);
     this.button = this.add.container(480, 491);
     const buttonBg = this.add.rectangle(0, 0, 270, 64, pokemonMode ? 0x34718d : 0x375e47).setInteractive({ useHandCursor: true });
     this.buttonText = this.label(0, 0, '게임 시작  →', 19, '#ffffff', '700');
@@ -143,7 +142,7 @@ class ShuffleScene extends Phaser.Scene {
   updateHud() {
     this.roundLabel.setText(`${hellMode ? 'HELL · ' : ''}STAGE ${this.round} / ${TOTAL_STAGES}`);
     this.scoreLabel.setText(`점수 ${this.score}   /   최고 ${this.best}`);
-    this.lifeLabel.setText(`재도전 ${this.lives}회  ${'♥'.repeat(this.lives)}${'♡'.repeat(3 - this.lives)}`);
+    this.lifeLabel.setText('재도전 ∞');
   }
   announce(title, hint) {
     title = displayText(title);
@@ -153,8 +152,8 @@ class ShuffleScene extends Phaser.Scene {
     document.querySelector('#status').textContent = `${title} ${hint}`;
   }
   advance() {
-    if (!['ready', 'result', 'over', 'won'].includes(this.phase)) return;
-    if (this.phase === 'over' || this.phase === 'won') {
+    if (!['ready', 'result', 'won'].includes(this.phase)) return;
+    if (this.phase === 'won') {
       this.scene.restart({ round: 1, autoStart: true });
       return;
     }
@@ -411,13 +410,7 @@ class ShuffleScene extends Phaser.Scene {
       this.announce('정답! 눈썰미가 좋은데요?', `+${this.round * 100}점! 다음 스테이지에 도전하세요.`);
       this.tweens.add({ targets: eater, y: 295, duration: 180, yoyo: true, repeat: 2 });
     } else {
-      if (this.lives > 0) {
-        this.lives--;
-        this.announce('앗, 다른 친구였어요!', `정답은 ${eater.slot + 1}번! 같은 스테이지에 재도전합니다. 이후 남은 재도전 ${this.lives}회`);
-      } else {
-        this.phase = 'over';
-        this.announce('아쉽지만, 게임 종료!', `정답은 ${eater.slot + 1}번! 전체 재도전 기회 3회를 모두 사용했어요.`);
-      }
+      this.announce('앗, 다른 친구였어요!', `정답은 ${eater.slot + 1}번! 같은 스테이지에 다시 도전해 보세요.`);
       this.cameras.main.shake(180, 0.004);
     }
     this.best = Math.max(this.best, this.score);
@@ -427,8 +420,7 @@ class ShuffleScene extends Phaser.Scene {
       this.phase = 'won';
       this.showVictory();
       this.buttonText.setText('처음부터 다시  ↻');
-    } else if (this.phase === 'over') this.buttonText.setText('처음부터 다시  ↻');
-    else this.buttonText.setText(correct ? '다음 스테이지  →' : '다시 도전  →');
+    } else this.buttonText.setText(correct ? '다음 스테이지  →' : '다시 도전  →');
     this.button.setVisible(true);
   }
 
@@ -441,7 +433,7 @@ class ShuffleScene extends Phaser.Scene {
     panel.add([background,
       this.label(0, -60, '★  ALL CLEAR  ★', 22, '#b78a37', '800'),
       this.label(0, -9, '축하합니다! 모두 통과했어요!', 27, C.green, '800'),
-      this.label(0, 43, `최종 점수 ${this.score}점 · 남은 재도전 ${this.lives}회`, 17, C.ink, '700'),
+      this.label(0, 43, `최종 점수 ${this.score}점 · 끝까지 도전 완료!`, 17, C.ink, '700'),
       this.label(0, 87, '당신을 떡 찾기 달인으로 인정합니다!', 14, C.muted),
     ]);
     this.button.setDepth(22);

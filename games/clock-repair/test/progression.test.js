@@ -23,7 +23,7 @@ function shop() {
     newTarget: () => ({ hour: 3, minute: 15, second: 30 }), document: { getElementById: element } };
   vm.createContext(context); vm.runInContext(source, context);
   const scene = new context.Shop();
-  Object.assign(scene, { order: 0, lives: 3, score: 0, combo: 0, bestCombo: 0, totalTips: 0, phase: 'ready', handObjects: {}, handGrips: {},
+  Object.assign(scene, { order: 0, score: 0, combo: 0, bestCombo: 0, totalTips: 0, phase: 'ready', handObjects: {}, handGrips: {},
     time: { now: 1000 }, cameras: { main: { shake() {} } }, scene: { restart(data) { scene.restarted = true; scene.restartData = data; } } });
   scene.prepareOrder(false);
   return { scene, element };
@@ -73,7 +73,6 @@ test('day and night orders show requests, itemized payment, and a final summary'
       scene.act();
     }
   }
-  assert.equal(scene.lives, 3);
   assert.equal(scene.combo, TOTAL_ORDER_COUNT);
   assert.equal(scene.bestCombo, TOTAL_ORDER_COUNT);
   assert.ok(scene.totalTips > 0);
@@ -90,7 +89,6 @@ test('new games start at the first day order with a shuffled twenty-order deck',
   scene.create();
   assert.equal(scene.order, 0);
   assert.equal(scene.orderSequence.length, TOTAL_ORDER_COUNT);
-  assert.equal(scene.lives, 3);
   assert.equal(scene.score, 0);
   assert.equal(scene.phase, 'briefing');
   assert.equal(element('game-stage').dataset.shift, 'day');
@@ -99,7 +97,7 @@ test('new games start at the first day order with a shuffled twenty-order deck',
   assert.equal(element('target').hidden, true);
 });
 
-test('wrong answers cost time and three timeouts end the run without replenishing chances', () => {
+test('wrong answers cost time and every order allows unlimited timeout retries', () => {
   const { scene, element } = shop();
   scene.act();
   const deadline = scene.deadline;
@@ -107,24 +105,25 @@ test('wrong answers cost time and three timeouts end the run without replenishin
   element('answer-minute').value = String(wrap(scene.target.minute + 1, 60));
   scene.act();
   assert.equal(scene.deadline, deadline - 3000);
-  assert.equal(scene.lives, 3);
   scene.time.now = scene.deadline;
   scene.update();
-  assert.equal(scene.lives, 2); assert.equal(scene.phase, 'retry');
+  assert.equal(scene.phase, 'retry');
   const previousTarget = scene.target;
   scene.act(); assert.equal(scene.target, previousTarget);
   scene.act();
   answerCorrect(scene, element);
   scene.act(); scene.act(); scene.act();
-  assert.equal(scene.order, 1); assert.equal(scene.lives, 2);
-  for (let remaining = 1; remaining >= 0; remaining--) {
+  assert.equal(scene.order, 1);
+  const secondTarget = scene.target;
+  for (let attempt = 0; attempt < 5; attempt++) {
     scene.time.now = scene.deadline;
     scene.update();
-    assert.equal(scene.lives, remaining);
-    if (remaining) { scene.act(); scene.act(); }
+    assert.equal(scene.phase, 'retry');
+    assert.equal(scene.order, 1);
+    assert.equal(scene.target, secondTarget);
+    scene.act(); scene.act();
   }
-  assert.equal(scene.phase, 'over');
-  scene.update(); assert.equal(scene.lives, 0);
+  assert.equal(scene.phase, 'playing');
 });
 
 test('a matching answer submitted after the deadline still times out', () => {
@@ -209,7 +208,6 @@ test('reading requests and results never consumes time or permits editing the cl
   assert.equal(formatTime(scene.current), formatTime(before));
   scene.time.now += 120000;
   scene.update(); scene.submit();
-  assert.equal(scene.lives, 3);
   assert.equal(scene.score, 0);
   scene.act();
   assert.equal(element('order-modal').open, false);
@@ -222,7 +220,6 @@ test('reading requests and results never consumes time or permits editing the cl
   const score = scene.score;
   scene.time.now += 120000;
   scene.update();
-  assert.equal(scene.lives, 3);
   assert.equal(scene.score, score);
   scene.act();
   assert.equal(scene.phase, 'briefing');
