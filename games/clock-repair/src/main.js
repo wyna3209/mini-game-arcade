@@ -271,6 +271,7 @@ class ClockShop extends Phaser.Scene {
       this.cleanOrder = true;
     }
     const reading = this.isReading();
+    $('game-stage').dataset.condition = this.service.offset ? 'offset' : 'normal';
     this.current = initialTime(this.serviceIndex, this.target);
     this.dragState = null;
     this.hasAdjusted = false;
@@ -326,6 +327,7 @@ class ClockShop extends Phaser.Scene {
     const customer = this.customer;
     const modal = $('order-modal');
     modal.dataset.kind = kind;
+    modal.dataset.condition = this.service.offset ? 'offset' : 'normal';
     $('modal-customer').textContent = customer.name;
     $('modal-icon').textContent = customer.icon;
     setPortrait($('modal-sprite'), customer.id, customer.name);

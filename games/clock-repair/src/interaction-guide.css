@@ -75,6 +75,38 @@
   box-shadow: 0 0 0 3px #f5d88780;
 }
 
+/* Time offsets are part of the answer, so keep them readable beside the reference clock. */
+.game-stage[data-condition='offset'] .service-panel #service-hint {
+  font-size: clamp(15px, 1.15cqw, 19px);
+  font-weight: 900;
+  line-height: 1.45;
+  color: #87431d;
+}
+
+.game-stage[data-condition='offset'] #order-instruction {
+  display: inline-block;
+  margin: .3em 0 .45em;
+  padding: .3em .55em;
+  border: 1px solid #d6a34b;
+  border-radius: 8px;
+  background: #fff0bd;
+  color: #783d18;
+  font-size: clamp(15px, 1.3cqw, 21px);
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.order-modal[data-kind='request'][data-condition='offset'] #modal-instruction {
+  display: inline-block;
+  padding: .4em .65em;
+  border-radius: 9px;
+  background: #fff0bd;
+  color: #783d18;
+  font-size: clamp(19px, 4.5vw, 23px);
+  font-weight: 900;
+  line-height: 1.45;
+}
+
 @keyframes guide-glow {
   50% { box-shadow: 0 0 0 7px #f6d37a44, 0 0 30px #ffe394bb, inset 0 0 25px #ffe39477; }
 }

@@ -156,10 +156,13 @@ test('keyboard adjustments carry time and cannot change a completed order', () =
 
 test('offset orders display a reference but require the calculated target', () => {
   const { scene, element } = shop();
+  assert.equal(element('game-stage').dataset.condition, 'normal');
   for (const order of [1, 4, 6, 9]) {
     scene.order = order;
     scene.prepareOrder(false);
     scene.act();
+    assert.equal(element('game-stage').dataset.condition, 'offset');
+    assert.equal(element('order-modal').dataset.condition, 'offset');
     assert.equal(element('target').textContent, formatTime(scene.request.reference));
     assert.notEqual(formatTime(scene.target), formatTime(scene.request.reference));
     assert.match(element('order-label').textContent, /기준/);
